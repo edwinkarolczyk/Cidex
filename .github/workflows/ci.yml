@@ -21,7 +21,7 @@ jobs:
       - name: Compile
         run: python -m compileall -q .
       - name: Tests
-        run: pytest -q
+        run: python -m pytest -q
 
   build-exe:
     runs-on: windows-latest
