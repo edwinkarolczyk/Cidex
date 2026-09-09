@@ -40,7 +40,7 @@ class CidexDemo(ctk.CTk):
         side.grid(row=0, column=0, sticky="nsew"); side.grid_propagate(False)
         main = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
         main.grid(row=0, column=1, sticky="nsew"); main.grid_columnconfigure(0, weight=1); main.grid_rowconfigure(4, weight=1)
-        self._sidebar(side); self._header(main); self._root(main); self._stats(main); self._actions(main); self._workspace(main); self._status(main)
+        self._sidebar(side); self._header(main); self._root_bar(main); self._stats(main); self._actions(main); self._workspace(main); self._status(main)
 
     def _sidebar(self, p):
         ctk.CTkLabel(p, text="⚙  🔧", text_color=ORANGE, font=("Segoe UI Emoji", 30)).pack(anchor="w", padx=20, pady=(22, 0))
@@ -76,7 +76,7 @@ class CidexDemo(ctk.CTk):
         ctk.CTkLabel(right, text="v0.2 UI-DEMO 1", text_color=MUTED, font=("Segoe UI", 9)).pack(anchor="e")
         ctk.CTkLabel(right, text="by Edwin K", text_color=MUTED, font=("Segoe UI", 9)).pack(anchor="e")
 
-    def _root(self, p):
+    def _root_bar(self, p):
         b = ctk.CTkFrame(p, fg_color=PANEL, corner_radius=20, border_width=1, border_color=BORDER, height=76)
         b.grid(row=1, column=0, sticky="ew", padx=24, pady=7); b.grid_columnconfigure(1, weight=1); b.grid_propagate(False)
         ctk.CTkLabel(b, text="📁  Ścieżka WM_ROOT", text_color=TEXT, font=("Segoe UI Semibold", 11)).grid(row=0, column=0, padx=18)
