@@ -10,7 +10,7 @@ from machine_store import (
     change_status,
     decode_machine_qr,
     get_machine,
-    list_machines,
+    load_machines,
 )
 
 
@@ -40,7 +40,7 @@ def _root(tmp_path: Path) -> Path:
 
 def test_loads_primary_machine_wrapper(tmp_path):
     root = _root(tmp_path)
-    rows = list_machines(root)
+    rows = load_machines(root)
     assert len(rows) == 1
     assert rows[0]["id"] == "42"
 
