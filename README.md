@@ -2,7 +2,7 @@
 
 CIDEX to osobny program pomocniczy dla Warsztat Menager. Nie zmienia kodu WM i nie importuje jego modułów Pythona. Korzysta wyłącznie z istniejącej struktury danych `WM_ROOT/data`.
 
-## Zakres v1.0 — Planista
+## Zakres v1.1 — Planista + Mobile
 
 - wybór i zapamiętanie `WM_ROOT`,
 - odczyt aktualnych zleceń i produktów,
@@ -14,16 +14,24 @@ CIDEX to osobny program pomocniczy dla Warsztat Menager. Nie zmienia kodu WM i n
 - tworzenie nowych zleceń,
 - bezpieczna aktualizacja ilości i terminu,
 - brak automatycznego usuwania,
-- autor zmian w historii: `Cidex`.
+- autor zmian w historii: `Cidex`,
+- lokalne API dla Cidex Mobile,
+- uruchamianie i zatrzymywanie Mobile API z głównego `Cidex.exe`.
 
-## Etap 11 — Maszyny
+## Planista — zasady z pliku projektu
+
+CIDEX pozostaje zewnętrznym „dokładaczem / synchronizatorem wejściowym” dla Planisty. Excel jest wyłącznie źródłem odczytu, a zapis następuje tylko do bieżącego `WM_ROOT` i tylko dla jawnie zatwierdzonych operacji `Utwórz` / `Aktualizuj`.
+
+`Usunięte w Excelu` jest informacją — CIDEX nie wykonuje automatycznego delete. Brak jednoznacznego dopasowania produktu lub zlecenia blokuje automatyczny zapis.
+
+## Maszyny dla Cidex Mobile
 
 CIDEX ma osobny adapter Maszyn, który czyta obecne źródła WM:
 
 - `data/maszyny/maszyny.json`,
 - awaryjnie stare `data/maszyny.json`.
 
-Obsługiwane są oba formaty danych spotykane w WM: lista oraz dokument `{"maszyny": [...]}`. Przy zapisie CIDEX używa kanonicznego `data/maszyny/maszyny.json` i formatu używanego obecnie przez WM.
+Obsługiwane są formaty danych spotykane w WM. Przy bieżącej strukturze WM zapis używa kanonicznego `data/maszyny/maszyny.json`.
 
 Dostępne operacje dla Cidex Mobile:
 
@@ -34,11 +42,36 @@ Dostępne operacje dla Cidex Mobile:
 - dodanie uwagi do bieżącego statusu,
 - dodanie zdjęcia do `data/maszyny/attachments/<ID>/...` i do istniejącego pola `status_current.photos`.
 
-Zmiana na Awarię albo Serwis / przegląd wymaga opisu. Zapisy są oznaczane autorem `Cidex`. Adapter nie zmienia modelu danych WM — wykorzystuje istniejące pola `status_current`, `status_history` i `photos`.
+Zmiana na Awarię albo Serwis / przegląd wymaga opisu. Zapisy są oznaczane autorem `Cidex`. Adapter nie tworzy równoległego modelu danych — wykorzystuje istniejące pola WM `status_current`, `status_history` i `photos`.
 
-## Etap 12 — API dla Cidex Mobile
+## Mobile API — najprostsze uruchomienie
 
-Uruchom najpierw zwykły CIDEX i ustaw poprawny `WM_ROOT`. Następnie:
+1. Uruchom `Cidex.exe`.
+2. Wybierz i zweryfikuj `WM_ROOT`.
+3. W lewym panelu kliknij `CIDEX Mobile`.
+4. Potwierdź uruchomienie API.
+
+CIDEX pokaże:
+
+- adres dla emulatora,
+- adres komputera w LAN dla telefonu,
+- port,
+- token.
+
+Token jest automatycznie kopiowany do schowka. Ponowne kliknięcie `CIDEX Mobile` pozwala zatrzymać serwer. Przy zamykaniu CIDEX program ostrzega, jeśli API nadal działa, i po potwierdzeniu zatrzymuje proces API.
+
+W wersji EXE pliki:
+
+```text
+Cidex.exe
+Cidex_Api.exe
+```
+
+powinny znajdować się obok siebie. Główny `Cidex.exe` uruchamia i kontroluje `Cidex_Api.exe` — użytkownik nie musi uruchamiać serwera ręcznie.
+
+## Alternatywne uruchomienie API z BAT
+
+W wersji źródłowej nadal można użyć:
 
 ```bat
 run_api.bat
@@ -65,6 +98,7 @@ Najważniejsze endpointy:
 - `GET /health`,
 - `GET /api/v1/info`,
 - `GET /api/v1/planista/orders`,
+- `POST /api/v1/planista/orders`,
 - `GET /api/v1/planista/products`,
 - `GET /api/v1/machines`,
 - `GET /api/v1/machines/<ID>`,
@@ -102,8 +136,6 @@ Cidex.exe
 Cidex_Api.exe
 ```
 
-`Cidex_Api.exe` jest na razie osobnym procesem serwera dla Mobile. Docelowo serwer zostanie sterowany z głównego `Cidex.exe`, po ustabilizowaniu komunikacji z aplikacją Android.
-
 ## Excel
 
 Wymagane kolumny są rozpoznawane m.in. jako:
@@ -121,13 +153,18 @@ Produkt jest dopasowywany najpierw po kodzie WM, a następnie po jednoznacznej n
 
 ## Struktura
 
-- `main.py` — interfejs CIDEX,
+- `main.py` — interfejs CIDEX i sterowanie Mobile API,
 - `cidex_config.py` — `WM_ROOT`, token i port API,
 - `wm_store.py` — Planista: odczyt i kontrolowany zapis danych WM,
 - `machine_store.py` — Maszyny: odczyt, QR, statusy, uwagi i zdjęcia,
 - `api_server.py` — lokalne API dla Cidex Mobile,
+- `mobile_api_launcher.py` — bezpieczne uruchamianie/zatrzymywanie API z GUI,
 - `excel_reader.py` — odczyt `.xlsx`,
 - `excel_diff.py` — porównanie Excel ↔ WM,
 - `sync_service.py` — zastosowanie wyłącznie zatwierdzonych zmian.
 
 Kod repozytorium Warsztat-Menager pozostaje niezależny i nie jest przez CIDEX modyfikowany.
+
+## Przed produkcją
+
+Ostatni odbiór powinien zostać wykonany na kopii aktualnego `WM_ROOT`: dodać jedno zlecenie z CIDEX PC, jedno z Cidex Mobile, sprawdzić import Excel, status maszyny, zdjęcie i QR, a następnie potwierdzić widoczność zmian po odświeżeniu WM. Dopiero po tym te same zapisy należy wykonywać na danych produkcyjnych.
