@@ -21,9 +21,9 @@ from machine_store import (
     photo_paths,
     resolve_machine_qr,
 )
-from wm_store import WmStoreError, list_orders, list_products
+from wm_store import WmStoreError, add_order, list_orders, list_products
 
-API_VERSION = "1.1"
+API_VERSION = "1.2"
 TOKEN_HEADER = "X-Cidex-Token"
 
 
@@ -128,6 +128,7 @@ def create_app(
                 "author": AUTHOR,
                 "features": {
                     "planista_read": True,
+                    "planista_create": True,
                     "machines_read": True,
                     "machine_qr": True,
                     "machine_status": True,
@@ -141,6 +142,19 @@ def create_app(
     def planista_orders():
         rows = list_orders(root_value())
         return jsonify({"ok": True, "count": len(rows), "items": rows})
+
+    @app.post("/api/v1/planista/orders")
+    def planista_add_order():
+        payload = request.get_json(silent=True) or {}
+        order = add_order(
+            root_value(),
+            product_code=str(payload.get("product_code") or "").strip(),
+            quantity=payload.get("quantity"),
+            external_no=str(payload.get("external_no") or "").strip(),
+            due_date=str(payload.get("due_date") or "").strip(),
+            notes=str(payload.get("notes") or "").strip(),
+        )
+        return jsonify({"ok": True, "item": order}), 201
 
     @app.get("/api/v1/planista/products")
     def planista_products():
