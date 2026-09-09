@@ -8,6 +8,8 @@ import secrets
 APP_DIR = Path(os.getenv("APPDATA") or Path.home()) / "Cidex"
 CONFIG_PATH = APP_DIR / "config.json"
 DEFAULT_API_PORT = 8765
+API_TOKEN_LENGTH = 6
+API_TOKEN_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
 
 def load_config() -> dict:
@@ -40,21 +42,36 @@ def set_saved_root(path: str) -> None:
     save_config(data)
 
 
+def _new_api_token() -> str:
+    return "".join(secrets.choice(API_TOKEN_ALPHABET) for _ in range(API_TOKEN_LENGTH))
+
+
+def _valid_api_token(token: str) -> bool:
+    value = str(token or "").strip().upper()
+    return len(value) == API_TOKEN_LENGTH and all(ch in API_TOKEN_ALPHABET for ch in value)
+
+
 def get_api_token() -> str:
     data = load_config()
-    token = str(data.get("api_token") or "").strip()
-    if token:
+    token = str(data.get("api_token") or "").strip().upper()
+    if _valid_api_token(token):
         return token
-    token = secrets.token_urlsafe(24)
+
+    # Migracja poprzedniego długiego tokenu: przy pierwszym uruchomieniu
+    # po aktualizacji nadajemy nowy, krótki kod WMM.
+    token = _new_api_token()
     data["api_token"] = token
     save_config(data)
     return token
 
 
 def set_api_token(token: str) -> None:
-    value = str(token or "").strip()
-    if not value:
-        raise ValueError("Token API nie może być pusty.")
+    value = str(token or "").strip().upper()
+    if not _valid_api_token(value):
+        raise ValueError(
+            f"Token WMM musi mieć dokładnie {API_TOKEN_LENGTH} znaków: "
+            "duże litery i cyfry bez mylących znaków."
+        )
     data = load_config()
     data["api_token"] = value
     save_config(data)
