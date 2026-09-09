@@ -1,16 +1,17 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title CIDEX - UI-DEMO 1
+title CIDEX - Planista
 
 echo ==========================================
-echo   CIDEX - UI-DEMO 1
+echo   CIDEX - Planista
+if not exist requirements.txt goto :error
 echo ==========================================
 echo.
 
-python -c "import customtkinter" >nul 2>&1
+python -c "import customtkinter, openpyxl" >nul 2>&1
 if errorlevel 1 (
-  echo Pierwsze uruchomienie - instalowanie wymaganych bibliotek...
+  echo Instalowanie wymaganych bibliotek...
   python -m pip install -r requirements.txt
   if errorlevel 1 goto :error
 )
@@ -22,7 +23,6 @@ exit /b 0
 :error
 echo.
 echo Nie udalo sie uruchomic CIDEX.
-echo Sprawdz, czy Python jest zainstalowany i dostepny w PATH.
-echo.
+echo Sprawdz komunikat bledu powyzej oraz instalacje Pythona.
 pause
 exit /b 1
