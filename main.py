@@ -7,9 +7,10 @@ from tkinter import filedialog, messagebox, ttk
 
 import customtkinter as ctk
 
-from cidex_config import get_saved_root, set_saved_root
+from cidex_config import get_api_port, get_api_token, get_saved_root, set_saved_root
 from excel_diff import ACTION_CREATE, ACTION_UPDATE, build_diff
 from excel_reader import ExcelReadError, read_excel
+from mobile_api_launcher import MobileApiController, MobileApiLaunchError, local_ip
 from sync_service import apply_selected
 from wm_store import AUTHOR, add_order, inspect_root, list_orders, list_products
 
@@ -50,7 +51,9 @@ class CidexApp(ctk.CTk):
         self.diff_plan = None
         self.item_by_iid = {}
         self.selected_ids = set()
+        self.mobile_api = MobileApiController()
 
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
         self._style_tree()
         self._build()
         if self.root_path.get():
@@ -106,7 +109,7 @@ class CidexApp(ctk.CTk):
         brand.pack(anchor="w", padx=20, pady=(0, 26))
         ctk.CTkLabel(brand, text="CID", text_color=TEXT, font=("Segoe UI Black", 25)).pack(side="left")
         ctk.CTkLabel(brand, text="EX", text_color=ORANGE, font=("Segoe UI Black", 25)).pack(side="left")
-        for icon, name in [("⌂", "Planista"), ("⚙", "Ustawienia"), ("▣", "Instrukcja"), ("ⓘ", "O programie")]:
+        for icon, name in [("⌂", "Planista"), ("▦", "CIDEX Mobile"), ("⚙", "Ustawienia"), ("▣", "Instrukcja"), ("ⓘ", "O programie")]:
             ctk.CTkButton(
                 parent,
                 text=f"{icon}   {name}",
@@ -126,6 +129,8 @@ class CidexApp(ctk.CTk):
     def _side_action(self, name):
         if name == "Planista":
             self._say("Planista — aktywny moduł Cidex.")
+        elif name == "CIDEX Mobile":
+            self._mobile_api_action()
         elif name == "Ustawienia":
             self._choose_root()
         elif name == "Instrukcja":
@@ -133,10 +138,14 @@ class CidexApp(ctk.CTk):
                 "CIDEX — instrukcja",
                 "1. Wybierz WM_ROOT.\n2. Dodaj zlecenie ręcznie lub wczytaj Excel.\n"
                 "3. Porównaj Excel z WM.\n4. Zaznacz bezpieczne pozycje.\n"
-                "5. Zastosuj wybrane.\n\nCidex nie usuwa zleceń automatycznie.",
+                "5. Zastosuj wybrane.\n6. CIDEX Mobile uruchamia/zatrzymuje API dla telefonu.\n\n"
+                "Cidex nie usuwa zleceń automatycznie.",
             )
         else:
-            messagebox.showinfo("O programie", "CIDEX\nPlanista — zewnętrzny dodatek do Warsztat Menager\nAutor zapisów: Cidex")
+            messagebox.showinfo(
+                "O programie",
+                "CIDEX\nPlanista + Mobile API — zewnętrzny dodatek do Warsztat Menager\nAutor zapisów: Cidex",
+            )
 
     def _header(self, parent):
         row = ctk.CTkFrame(parent, fg_color="transparent")
@@ -152,7 +161,7 @@ class CidexApp(ctk.CTk):
         ctk.CTkLabel(row, text="Planowanie to większe możliwości", text_color="#C7D0D8", font=("Segoe Print", 14)).grid(row=0, column=1, padx=20)
         right = ctk.CTkFrame(row, fg_color="transparent")
         right.grid(row=0, column=2, sticky="e")
-        ctk.CTkLabel(right, text="v1.0 Planista", text_color=MUTED, font=("Segoe UI", 9)).pack(anchor="e")
+        ctk.CTkLabel(right, text="v1.1 Planista + Mobile", text_color=MUTED, font=("Segoe UI", 9)).pack(anchor="e")
         ctk.CTkLabel(right, text="by Edwin K", text_color=MUTED, font=("Segoe UI", 9)).pack(anchor="e")
 
     def _root_bar(self, parent):
@@ -286,6 +295,49 @@ class CidexApp(ctk.CTk):
         ctk.CTkLabel(bar, text="●", text_color="#34C6F4", font=("Segoe UI", 14)).pack(side="left", padx=(14, 8))
         ctk.CTkLabel(bar, textvariable=self.status_text, text_color="#DBE5EC", font=("Segoe UI", 9)).pack(side="left", fill="x", expand=True)
         ctk.CTkLabel(bar, text="AUTOR: CIDEX", text_color=ORANGE, font=("Segoe UI Semibold", 9)).pack(side="right", padx=14)
+
+    def _mobile_api_action(self):
+        port = get_api_port()
+        token = get_api_token()
+        if self.mobile_api.is_running():
+            pid = self.mobile_api.pid or "—"
+            if messagebox.askyesno(
+                "CIDEX Mobile API",
+                f"API działa.\nPID: {pid}\nPort: {port}\n\nZatrzymać API dla telefonu?",
+            ):
+                try:
+                    self.mobile_api.stop()
+                    self._say("CIDEX Mobile API zatrzymane.")
+                except Exception as exc:
+                    messagebox.showerror("CIDEX Mobile API", str(exc))
+            return
+
+        if not self._ensure_root():
+            return
+        lan = local_ip()
+        if not messagebox.askyesno(
+            "CIDEX Mobile API",
+            "Uruchomić API dla Cidex Mobile?\n\n"
+            f"Emulator: http://10.0.2.2:{port}\n"
+            f"Telefon w LAN: http://{lan}:{port}\n\n"
+            f"Token: {token}\n\n"
+            "Token zostanie skopiowany do schowka. API udostępnia wyłącznie kontrolowane endpointy CIDEX.",
+        ):
+            return
+        try:
+            pid = self.mobile_api.start(self.root_path.get())
+            self.clipboard_clear()
+            self.clipboard_append(token)
+            self.update_idletasks()
+        except (MobileApiLaunchError, Exception) as exc:
+            messagebox.showerror("CIDEX Mobile API", str(exc))
+            self._say(str(exc))
+            return
+        self._say(f"CIDEX Mobile API działa na porcie {port}. PID {pid}. Token skopiowano.")
+        messagebox.showinfo(
+            "CIDEX Mobile API",
+            f"API uruchomione.\n\nTelefon: http://{lan}:{port}\nEmulator: http://10.0.2.2:{port}\n\nToken skopiowano do schowka.",
+        )
 
     def _choose_root(self):
         selected = filedialog.askdirectory(title="Wybierz folder WM_ROOT")
@@ -497,6 +549,19 @@ class CidexApp(ctk.CTk):
 
     def _say(self, text):
         self.status_text.set(str(text))
+
+    def _on_close(self):
+        if self.mobile_api.is_running():
+            if not messagebox.askyesno(
+                "CIDEX",
+                "CIDEX Mobile API nadal działa. Zamknięcie CIDEX zatrzyma także API dla telefonu.\n\nZamknąć program?",
+            ):
+                return
+            try:
+                self.mobile_api.stop()
+            except Exception:
+                pass
+        self.destroy()
 
     @staticmethod
     def _tag_for(status):
