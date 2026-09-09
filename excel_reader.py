@@ -12,7 +12,7 @@ class ExcelReadError(ValueError):
 
 
 ALIASES = {
-    "nr_zlec": {"nr zlec", "nr zlecenia", "zlecenie", "zlecenie wew", "nr zamowienia"},
+    "nr_zlec": {"nr zlec", "nr zlecenia", "zlecenie", "zlecenie wew", "nr zamowienia", "nr zamówienia"},
     "produkt": {"produkt", "produkt / oznaczenie", "oznaczenie", "symbol", "kod produktu"},
     "ilosc": {"ilosc", "ilość", "qty", "szt", "sztuki"},
     "data_wysylki": {"data wysylki", "data wysyłki", "termin", "wysylka", "wysyłka"},
@@ -22,6 +22,8 @@ ALIASES = {
 
 def _norm(value) -> str:
     text = str(value or "").strip().casefold().replace("_", " ")
+    for char in ".:;":
+        text = text.replace(char, "")
     return " ".join(text.split())
 
 
