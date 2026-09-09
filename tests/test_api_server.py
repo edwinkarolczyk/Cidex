@@ -116,3 +116,31 @@ def test_planista_read_endpoint_uses_current_wm_root(tmp_path):
     payload = response.get_json()
     assert payload["count"] == 1
     assert payload["items"][0]["zlec_wew"] == "1001"
+
+
+def test_mobile_can_create_safe_planista_order(tmp_path):
+    client, root = _client(tmp_path)
+    response = client.post(
+        "/api/v1/planista/orders",
+        headers=_headers(),
+        json={
+            "product_code": "PRD001",
+            "quantity": 12,
+            "external_no": "1002",
+            "due_date": "2026-09-20",
+            "notes": "Dodane z telefonu",
+        },
+    )
+    assert response.status_code == 201
+    order = response.get_json()["item"]
+    assert order["id"] == "000002"
+    assert order["produkt"] == "PRD001"
+    assert order["zlec_wew"] == "1002"
+    assert order["ilosc"] == 12
+    assert order["historia"][0]["kto"] == "Cidex"
+    assert order["materialy_zarezerwowane"] is False
+
+    saved = json.loads(
+        (root / "data" / "zlecenia" / "000002.json").read_text(encoding="utf-8")
+    )
+    assert saved["uwagi"] == "Dodane z telefonu"
