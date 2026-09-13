@@ -1,22 +1,21 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title CIDEX - Planista
+title CIDEX - Monitor Excel
 
 echo ==========================================
-echo   CIDEX - Planista
-if not exist requirements.txt goto :error
+echo   CIDEX - Monitor Excel
 echo ==========================================
 echo.
 
-python -c "import customtkinter, openpyxl" >nul 2>&1
+python -c "import openpyxl, pandas, xlrd" >nul 2>&1
 if errorlevel 1 (
   echo Instalowanie wymaganych bibliotek...
   python -m pip install -r requirements.txt
   if errorlevel 1 goto :error
 )
 
-python main.py
+python launcher.py
 if errorlevel 1 goto :error
 exit /b 0
 
