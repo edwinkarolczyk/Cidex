@@ -11,8 +11,11 @@ echo.
 python -m pip install -r requirements-build.txt
 if errorlevel 1 goto :fail
 
+powershell -NoProfile -Command "$b64 = Get-Content 'cidex.ico.b64.tmp' -Raw; [IO.File]::WriteAllBytes('cidex.ico', [Convert]::FromBase64String($b64.Trim()))"
+if errorlevel 1 goto :fail
+
 echo [1/2] Cidex.exe...
-python -m PyInstaller --noconfirm --clean --onefile --windowed --name Cidex main.py
+python -m PyInstaller --noconfirm --clean --onefile --windowed --icon cidex.ico --name Cidex cidex_entry.py
 if errorlevel 1 goto :fail
 
 echo [2/2] Cidex_Api.exe...
