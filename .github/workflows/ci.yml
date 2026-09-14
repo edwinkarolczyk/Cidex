@@ -37,7 +37,7 @@ jobs:
       - name: Install
         run: python -m pip install -r requirements-build.txt
       - name: Build Cidex.exe
-        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name Cidex launcher.py
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name Cidex cidex_entry.py
       - name: Build Cidex_Api.exe
         run: python -m PyInstaller --noconfirm --clean --onefile --console --name Cidex_Api api_server.py
       - name: Upload Windows executables
