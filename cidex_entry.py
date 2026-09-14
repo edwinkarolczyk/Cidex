@@ -21,10 +21,12 @@ def main() -> None:
         from runtime_compat import install_runtime_fixes
         from search_ui import install_search_ui
         from ui_column_widths import install_column_widths
+        from visual_polish import install_visual_polish
 
         install_runtime_fixes(launcher)
         install_search_ui(launcher.EnhancedCidexApp)
         install_column_widths(launcher.EnhancedCidexApp)
+        install_visual_polish(launcher.EnhancedCidexApp)
         install_background_mode(launcher.EnhancedCidexApp)
         launcher.main()
     finally:
