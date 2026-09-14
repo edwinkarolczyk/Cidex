@@ -15,7 +15,7 @@ if errorlevel 1 (
   if errorlevel 1 goto :error
 )
 
-python launcher.py
+python cidex_entry.py
 if errorlevel 1 goto :error
 exit /b 0
 
