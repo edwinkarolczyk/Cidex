@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.11'
       - name: Install
         run: |
           python -m pip install --upgrade pip
@@ -33,11 +33,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.11'
       - name: Install
         run: python -m pip install -r requirements-build.txt
+      - name: Prepare CIDEX icon
+        shell: pwsh
+        run: |
+          $b64 = Get-Content cidex.ico.b64.tmp -Raw
+          [IO.File]::WriteAllBytes("cidex.ico", [Convert]::FromBase64String($b64.Trim()))
       - name: Build Cidex.exe
-        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name Cidex cidex_entry.py
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --icon cidex.ico --name Cidex cidex_entry.py
       - name: Build Cidex_Api.exe
         run: python -m PyInstaller --noconfirm --clean --onefile --console --name Cidex_Api api_server.py
       - name: Upload Windows executables
@@ -60,7 +65,7 @@ jobs:
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
             gh release upload $tag Cidex.exe --clobber
-            gh release edit $tag --title "CIDEX $version" --notes "CIDEX $version - monitor planu Excel, automatyczne wykrywanie zmian, kontrola produktów WM i aktualizacje z aplikacji."
+            gh release edit $tag --title "CIDEX $version" --notes "CIDEX $version - stabilniejszy build Windows, poprawki monitora Excel, praca w tle i własna ikona aplikacji."
           } else {
-            gh release create $tag Cidex.exe --title "CIDEX $version" --notes "CIDEX $version - monitor planu Excel, automatyczne wykrywanie zmian, kontrola produktów WM i aktualizacje z aplikacji."
+            gh release create $tag Cidex.exe --title "CIDEX $version" --notes "CIDEX $version - stabilniejszy build Windows, poprawki monitora Excel, praca w tle i własna ikona aplikacji."
           }
