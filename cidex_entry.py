@@ -19,8 +19,10 @@ def main() -> None:
         import launcher
         from background_mode import install_background_mode
         from runtime_compat import install_runtime_fixes
+        from search_ui import install_search_ui
 
         install_runtime_fixes(launcher)
+        install_search_ui(launcher.EnhancedCidexApp)
         install_background_mode(launcher.EnhancedCidexApp)
         launcher.main()
     finally:
