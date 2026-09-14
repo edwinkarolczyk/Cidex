@@ -41,17 +41,23 @@ jobs:
         run: |
           $b64 = Get-Content cidex.ico.b64.tmp -Raw
           [IO.File]::WriteAllBytes("cidex.ico", [Convert]::FromBase64String($b64.Trim()))
-      - name: Build Cidex.exe
-        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --icon cidex.ico --name Cidex cidex_entry.py
+      - name: Build standard Cidex.exe
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --icon cidex.ico --name Cidex --distpath dist-onefile --workpath build-onefile cidex_entry.py
+      - name: Build portable CIDEX folder
+        run: python -m PyInstaller --noconfirm --clean --onedir --windowed --icon cidex.ico --name Cidex --distpath dist-portable --workpath build-portable cidex_entry.py
+      - name: Pack portable CIDEX
+        shell: pwsh
+        run: Compress-Archive -Path "dist-portable\Cidex\*" -DestinationPath "Cidex-Portable.zip" -Force
       - name: Build Cidex_Api.exe
-        run: python -m PyInstaller --noconfirm --clean --onefile --console --name Cidex_Api api_server.py
+        run: python -m PyInstaller --noconfirm --clean --onefile --console --name Cidex_Api --distpath dist-api --workpath build-api api_server.py
       - name: Upload Windows executables
         uses: actions/upload-artifact@v4
         with:
           name: Cidex-Windows
           path: |
-            dist/Cidex.exe
-            dist/Cidex_Api.exe
+            dist-onefile/Cidex.exe
+            dist-api/Cidex_Api.exe
+            Cidex-Portable.zip
 
       - name: Publish updater release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -61,11 +67,11 @@ jobs:
         run: |
           $version = python -c "from version import APP_VERSION; print(APP_VERSION)"
           $tag = "v$version"
-          Copy-Item dist/Cidex.exe Cidex.exe -Force
+          Copy-Item dist-onefile/Cidex.exe Cidex.exe -Force
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
-            gh release upload $tag Cidex.exe --clobber
-            gh release edit $tag --title "CIDEX $version" --notes "CIDEX $version - stabilniejszy build Windows, poprawki monitora Excel, praca w tle i własna ikona aplikacji."
+            gh release upload $tag Cidex.exe Cidex-Portable.zip --clobber
+            gh release edit $tag --title "CIDEX $version" --notes "CIDEX $version - monitor planu Excel z wyszukiwarką i filtrami. Dodano wersję Portable (onedir) dla komputerów, na których build onefile ma problem z ładowaniem Python DLL z katalogu TEMP."
           } else {
-            gh release create $tag Cidex.exe --title "CIDEX $version" --notes "CIDEX $version - stabilniejszy build Windows, poprawki monitora Excel, praca w tle i własna ikona aplikacji."
+            gh release create $tag Cidex.exe Cidex-Portable.zip --title "CIDEX $version" --notes "CIDEX $version - monitor planu Excel z wyszukiwarką i filtrami. Dodano wersję Portable (onedir) dla komputerów, na których build onefile ma problem z ładowaniem Python DLL z katalogu TEMP."
           }
