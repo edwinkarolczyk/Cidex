@@ -582,6 +582,18 @@ def format_parser_summary(
     ]
 
 
+def format_display_timestamp(value: Any) -> str:
+    """Format stored ISO timestamps for the Polish desktop UI."""
+    text = normalize_text(value)
+    if not text:
+        return ""
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return text
+    return parsed.strftime("%d.%m.%Y %H:%M:%S")
+
+
 def display_row(change: dict[str, Any]) -> tuple[Any, ...]:
     old, new = change.get("old", ""), change.get("new", "")
     if isinstance(old, dict):
@@ -589,7 +601,7 @@ def display_row(change: dict[str, Any]) -> tuple[Any, ...]:
     if isinstance(new, dict):
         new = new.get("quantity", "")
     return (
-        change.get("timestamp", ""),
+        format_display_timestamp(change.get("timestamp", "")),
         CHANGE_LABELS.get(change.get("type", ""), change.get("type", "")),
         change.get("order", ""),
         change.get("symbol", ""),
