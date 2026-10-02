@@ -15,7 +15,7 @@ powershell -NoProfile -Command "$b64 = Get-Content 'cidex.ico.b64.tmp' -Raw; [IO
 if errorlevel 1 goto :fail
 
 echo [1/2] Cidex.exe...
-python -m PyInstaller --noconfirm --clean --onefile --windowed --icon cidex.ico --name Cidex cidex_entry.py
+python -m PyInstaller --noconfirm --clean --onefile --windowed --runtime-tmpdir .cidex_runtime --icon cidex.ico --name Cidex cidex_entry.py
 if errorlevel 1 goto :fail
 
 echo [2/2] Cidex_Api.exe...
