@@ -35,7 +35,8 @@ class EnhancedCidexApp(CidexExcelApp):
 
     def _build_ui(self) -> None:
         super()._build_ui()
-        self.table.heading("department", text="WM / dział")
+        self.table.heading("date", text="Wykryto")
+        self.table.heading("department", text="Produkt w WM")
         self.table.tag_configure("wm_missing", foreground=GREEN)
         self.table.tag_configure("wm_exists", foreground=YELLOW)
         self.table.tag_configure("wm_unknown", foreground=MUTED)
@@ -209,8 +210,7 @@ class EnhancedCidexApp(CidexExcelApp):
         for change in changes:
             values = list(display_row(change))
             wm_label = change.get("wm_label", "NIE SPRAWDZONO")
-            department = values[6] if len(values) > 6 else "NIE"
-            values[6] = f"{wm_label} • dział {department}"
+            values[6] = wm_label
             state = change.get("wm_state")
             if change.get("type") == "removed":
                 tag = "removed"
