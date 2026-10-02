@@ -73,5 +73,5 @@ jobs:
             gh release upload $tag Cidex.exe Cidex-Portable.zip --clobber
             gh release edit $tag --title "CIDEX $version" --notes "CIDEX $version - poprawka startu EXE na komputerach, na których PyInstaller nie potrafił załadować python311.dll z katalogu TEMP. Onefile rozpakowuje runtime do lokalnego katalogu .cidex_runtime i przechodzi test startowy w CI. Zachowano bezpieczne wykrywanie oryginału i kopii planu Excel."
           } else {
-            gh release create $tag Cidex.exe Cidex-Portable.zip --title "CIDEX $version" --notes "CIDEX $version - bezpieczne wykrywanie oryginału i kopii planu Excel. CIDEX skanuje tylko rodzinę nazwy planu, analizuje wyłącznie odłączone kopie robocze i nie pozostawia plików produkcyjnych otwartych. Przy równoczesnych różnych zmianach zatrzymuje aktualizację snapshotu i prosi operatora o wybór właściwej wersji."
+            gh release create $tag Cidex.exe Cidex-Portable.zip --title "CIDEX $version" --notes "CIDEX $version - poprawka startu EXE na komputerach, na których PyInstaller nie potrafił załadować python311.dll z katalogu TEMP. Onefile rozpakowuje runtime do lokalnego katalogu .cidex_runtime i przechodzi test startowy w CI. Zachowano bezpieczne wykrywanie oryginału i kopii planu Excel."
           }
