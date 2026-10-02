@@ -74,7 +74,7 @@ jobs:
         run: |
           $version = python -c "from version import APP_VERSION; print(APP_VERSION)"
           $tag = "v$version"
-          $notes = "CIDEX $version - poprawka startu EXE na komputerach, na których PyInstaller nie potrafił załadować python311.dll z katalogu TEMP. Onefile rozpakowuje runtime do lokalnego katalogu .cidex_runtime i przechodzi test startowy w CI. Zachowano bezpieczne wykrywanie oryginału i kopii planu Excel."
+          $notes = "CIDEX $version - czytelna podpowiedź i walidacja WM_ROOT. CIDEX pokazuje, że WM_ROOT ma wskazywać folder główny Warsztat Menager zawierający data (lub bezpośrednio folder data), odrzuca data\\produkty i pokazuje status OK/BŁĘDNY wraz z wykrytym katalogiem produktów."
           Copy-Item dist-onefile/Cidex.exe Cidex.exe -Force
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
