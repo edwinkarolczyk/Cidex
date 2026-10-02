@@ -43,7 +43,14 @@ jobs:
           [IO.File]::WriteAllBytes("cidex.ico", [Convert]::FromBase64String($b64.Trim()))
       - name: Build standard Cidex.exe
         run: python -m PyInstaller --noconfirm --clean --onefile --windowed --runtime-tmpdir .cidex_runtime --icon cidex.ico --name Cidex --distpath dist-onefile --workpath build-onefile cidex_entry.py
-      - name: Smoke test onefile bootloader\n        shell: pwsh\n        run: |\n          $p = Start-Process -FilePath \"dist-onefile\\Cidex.exe\" -ArgumentList \"--self-test\" -PassThru -Wait\n          if ($p.ExitCode -ne 0) { throw \"Cidex.exe self-test failed with exit code $($p.ExitCode)\" }\n      - name: Build portable CIDEX folder
+      - name: Smoke test onefile bootloader
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath "dist-onefile\Cidex.exe" -ArgumentList "--self-test" -PassThru -Wait
+          if ($p.ExitCode -ne 0) {
+            throw "Cidex.exe self-test failed with exit code $($p.ExitCode)"
+          }
+      - name: Build portable CIDEX folder
         run: python -m PyInstaller --noconfirm --clean --onedir --windowed --icon cidex.ico --name Cidex --distpath dist-portable --workpath build-portable cidex_entry.py
       - name: Pack portable CIDEX
         shell: pwsh
@@ -67,11 +74,12 @@ jobs:
         run: |
           $version = python -c "from version import APP_VERSION; print(APP_VERSION)"
           $tag = "v$version"
+          $notes = "CIDEX $version - poprawka startu EXE na komputerach, na których PyInstaller nie potrafił załadować python311.dll z katalogu TEMP. Onefile rozpakowuje runtime do lokalnego katalogu .cidex_runtime i przechodzi test startowy w CI. Zachowano bezpieczne wykrywanie oryginału i kopii planu Excel."
           Copy-Item dist-onefile/Cidex.exe Cidex.exe -Force
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
             gh release upload $tag Cidex.exe Cidex-Portable.zip --clobber
-            gh release edit $tag --title "CIDEX $version" --notes "CIDEX $version - poprawka startu EXE na komputerach, na których PyInstaller nie potrafił załadować python311.dll z katalogu TEMP. Onefile rozpakowuje runtime do lokalnego katalogu .cidex_runtime i przechodzi test startowy w CI. Zachowano bezpieczne wykrywanie oryginału i kopii planu Excel."
+            gh release edit $tag --title "CIDEX $version" --notes $notes
           } else {
-            gh release create $tag Cidex.exe Cidex-Portable.zip --title "CIDEX $version" --notes "CIDEX $version - poprawka startu EXE na komputerach, na których PyInstaller nie potrafił załadować python311.dll z katalogu TEMP. Onefile rozpakowuje runtime do lokalnego katalogu .cidex_runtime i przechodzi test startowy w CI. Zachowano bezpieczne wykrywanie oryginału i kopii planu Excel."
+            gh release create $tag Cidex.exe Cidex-Portable.zip --title "CIDEX $version" --notes $notes
           }
