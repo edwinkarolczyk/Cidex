@@ -15,6 +15,7 @@ from plan_monitor import FIELDS, display_row, setup_logging
 from updater import CidexUpdater, ReleaseInfo
 from version import APP_VERSION
 from wm_compare import enrich_changes_with_wm
+from wm_store import WmStoreError, inspect_root
 
 GREEN = "#67E58A"
 YELLOW = "#FFD166"
@@ -50,18 +51,21 @@ class EnhancedCidexApp(CidexExcelApp):
         )
         bar.pack(fill="x", padx=24, pady=(0, 14))
 
+        top = tk.Frame(bar, bg=PANEL)
+        top.pack(fill="x")
+
         self.wm_root_text = tk.StringVar()
         self._refresh_wm_root_text()
         tk.Label(
-            bar,
+            top,
             textvariable=self.wm_root_text,
             bg=PANEL,
             fg=MUTED,
             font=("Segoe UI", 9),
         ).pack(side="left")
         tk.Button(
-            bar,
-            text="WM_ROOT",
+            top,
+            text="Ustaw WM_ROOT",
             command=self._choose_wm_root,
             bg="#344553",
             fg="white",
@@ -73,7 +77,7 @@ class EnhancedCidexApp(CidexExcelApp):
         ).pack(side="left", padx=8)
 
         tk.Label(
-            bar,
+            top,
             text="BRAK W WM = zielony • ISTNIEJE W WM = żółty",
             bg=PANEL,
             fg=ACCENT,
@@ -82,7 +86,7 @@ class EnhancedCidexApp(CidexExcelApp):
 
         self.version_text = tk.StringVar(value=f"CIDEX {APP_VERSION}")
         tk.Button(
-            bar,
+            top,
             textvariable=self.version_text,
             command=self._open_updates,
             bg=BLUE,
@@ -94,22 +98,72 @@ class EnhancedCidexApp(CidexExcelApp):
             pady=5,
         ).pack(side="right")
 
+        tk.Label(
+            bar,
+            text=(
+                "Podpowiedź: WM_ROOT = folder główny Warsztat Menager zawierający "
+                "folder data (np. C:\\Warsztat-Menager). Możesz też wskazać sam "
+                "folder data. NIE wybieraj data\\produkty."
+            ),
+            bg=PANEL,
+            fg=MUTED,
+            font=("Segoe UI", 8),
+            anchor="w",
+            justify="left",
+        ).pack(fill="x", pady=(6, 0))
+
     def _refresh_wm_root_text(self) -> None:
         root = get_saved_root()
+        if not root:
+            self.wm_root_text.set(
+                "WM_ROOT: nie ustawiono — produkty nie będą sprawdzane"
+            )
+            return
+
+        try:
+            info = inspect_root(root)
+        except (WmStoreError, OSError, ValueError):
+            self.wm_root_text.set(f"WM_ROOT: {root} • BŁĘDNY")
+            return
+
         self.wm_root_text.set(
-            f"WM_ROOT: {root}"
-            if root
-            else "WM_ROOT: nie ustawiono — produkty nie będą sprawdzane"
+            f"WM_ROOT: {info.selected} • OK → {info.products_dir}"
         )
 
     def _choose_wm_root(self) -> None:
-        selected = filedialog.askdirectory(title="Wybierz WM_ROOT do odczytu produktów")
+        selected = filedialog.askdirectory(
+            title=(
+                "Wybierz folder główny Warsztat Menager "
+                "(z folderem data) albo sam folder data"
+            )
+        )
         if not selected:
             return
-        set_saved_root(selected)
+
+        try:
+            info = inspect_root(selected)
+        except (WmStoreError, OSError, ValueError) as exc:
+            messagebox.showerror(
+                "CIDEX — błędny WM_ROOT",
+                (
+                    f"{exc}\n\n"
+                    "Wskaż folder główny Warsztat Menager, który zawiera:\n"
+                    "  data\\zlecenia\n"
+                    "  data\\produkty\n\n"
+                    "Możesz też wskazać bezpośrednio folder data.\n"
+                    "Nie wybieraj folderu data\\produkty."
+                ),
+                parent=self,
+            )
+            return
+
+        set_saved_root(str(info.selected))
         self._refresh_wm_root_text()
         if self.last_changes:
-            self.last_changes = enrich_changes_with_wm(self.last_changes, selected)
+            self.last_changes = enrich_changes_with_wm(
+                self.last_changes,
+                str(info.selected),
+            )
             self._render(self.last_changes)
 
     def _handle_result(self, result: Any) -> None:
