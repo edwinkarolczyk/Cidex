@@ -42,8 +42,8 @@ jobs:
           $b64 = Get-Content cidex.ico.b64.tmp -Raw
           [IO.File]::WriteAllBytes("cidex.ico", [Convert]::FromBase64String($b64.Trim()))
       - name: Build standard Cidex.exe
-        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --icon cidex.ico --name Cidex --distpath dist-onefile --workpath build-onefile cidex_entry.py
-      - name: Build portable CIDEX folder
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --runtime-tmpdir .cidex_runtime --icon cidex.ico --name Cidex --distpath dist-onefile --workpath build-onefile cidex_entry.py
+      - name: Smoke test onefile bootloader\n        shell: pwsh\n        run: |\n          $p = Start-Process -FilePath \"dist-onefile\\Cidex.exe\" -ArgumentList \"--self-test\" -PassThru -Wait\n          if ($p.ExitCode -ne 0) { throw \"Cidex.exe self-test failed with exit code $($p.ExitCode)\" }\n      - name: Build portable CIDEX folder
         run: python -m PyInstaller --noconfirm --clean --onedir --windowed --icon cidex.ico --name Cidex --distpath dist-portable --workpath build-portable cidex_entry.py
       - name: Pack portable CIDEX
         shell: pwsh
@@ -71,7 +71,7 @@ jobs:
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
             gh release upload $tag Cidex.exe Cidex-Portable.zip --clobber
-            gh release edit $tag --title "CIDEX $version" --notes "CIDEX $version - bezpieczne wykrywanie oryginału i kopii planu Excel. CIDEX skanuje tylko rodzinę nazwy planu, analizuje wyłącznie odłączone kopie robocze i nie pozostawia plików produkcyjnych otwartych. Przy równoczesnych różnych zmianach zatrzymuje aktualizację snapshotu i prosi operatora o wybór właściwej wersji."
+            gh release edit $tag --title "CIDEX $version" --notes "CIDEX $version - poprawka startu EXE na komputerach, na których PyInstaller nie potrafił załadować python311.dll z katalogu TEMP. Onefile rozpakowuje runtime do lokalnego katalogu .cidex_runtime i przechodzi test startowy w CI. Zachowano bezpieczne wykrywanie oryginału i kopii planu Excel."
           } else {
             gh release create $tag Cidex.exe Cidex-Portable.zip --title "CIDEX $version" --notes "CIDEX $version - bezpieczne wykrywanie oryginału i kopii planu Excel. CIDEX skanuje tylko rodzinę nazwy planu, analizuje wyłącznie odłączone kopie robocze i nie pozostawia plików produkcyjnych otwartych. Przy równoczesnych różnych zmianach zatrzymuje aktualizację snapshotu i prosi operatora o wybór właściwej wersji."
           }
