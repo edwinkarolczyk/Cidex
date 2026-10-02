@@ -8,6 +8,7 @@ from plan_monitor import (
     PlanMonitor,
     compare_plans,
     detect_column_mapping,
+    display_row,
     normalize_quantity,
     parse_plan,
 )
@@ -182,3 +183,18 @@ def test_plan_monitor_persists_snapshot_and_history(tmp_path: Path):
     assert [change["type"] for change in second.changes] == [
         "quantity_changed"
     ]
+
+
+def test_display_row_formats_iso_timestamp_for_polish_ui():
+    row = display_row(
+        {
+            "timestamp": "2026-10-02T13:03:41",
+            "type": "new",
+            "order": "766",
+            "symbol": "6.FWB - RAL 7036",
+            "old": "",
+            "new": {"quantity": 50},
+            "department_related": False,
+        }
+    )
+    assert row[0] == "02.10.2026 13:03:41"
