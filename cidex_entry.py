@@ -2,12 +2,30 @@
 
 from __future__ import annotations
 
+import sys
+
 from excel_compat import install_plan_monitor_excel_fix
 from excel_source_guard import install_excel_source_guard
 from single_instance import SingleInstanceGuard
 
 
+def _self_test() -> None:
+    """Minimal boot/runtime test used by CI before publishing Cidex.exe."""
+    import json  # noqa: F401
+    import tkinter  # noqa: F401
+
+    import openpyxl  # noqa: F401
+    import pandas  # noqa: F401
+
+    import plan_monitor  # noqa: F401
+    import version  # noqa: F401
+
+
 def main() -> None:
+    if "--self-test" in sys.argv:
+        _self_test()
+        return
+
     guard = SingleInstanceGuard()
     if not guard.acquire():
         guard.restore_existing_window()
