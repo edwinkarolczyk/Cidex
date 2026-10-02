@@ -71,7 +71,7 @@ jobs:
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
             gh release upload $tag Cidex.exe Cidex-Portable.zip --clobber
-            gh release edit $tag --title "CIDEX $version" --notes "CIDEX $version - monitor planu Excel z wyszukiwarką i filtrami. Dodano wersję Portable (onedir) dla komputerów, na których build onefile ma problem z ładowaniem Python DLL z katalogu TEMP."
+            gh release edit $tag --title "CIDEX $version" --notes "CIDEX $version - bezpieczne wykrywanie oryginału i kopii planu Excel. CIDEX skanuje tylko rodzinę nazwy planu, analizuje wyłącznie odłączone kopie robocze i nie pozostawia plików produkcyjnych otwartych. Przy równoczesnych różnych zmianach zatrzymuje aktualizację snapshotu i prosi operatora o wybór właściwej wersji."
           } else {
-            gh release create $tag Cidex.exe Cidex-Portable.zip --title "CIDEX $version" --notes "CIDEX $version - monitor planu Excel z wyszukiwarką i filtrami. Dodano wersję Portable (onedir) dla komputerów, na których build onefile ma problem z ładowaniem Python DLL z katalogu TEMP."
+            gh release create $tag Cidex.exe Cidex-Portable.zip --title "CIDEX $version" --notes "CIDEX $version - bezpieczne wykrywanie oryginału i kopii planu Excel. CIDEX skanuje tylko rodzinę nazwy planu, analizuje wyłącznie odłączone kopie robocze i nie pozostawia plików produkcyjnych otwartych. Przy równoczesnych różnych zmianach zatrzymuje aktualizację snapshotu i prosi operatora o wybór właściwej wersji."
           }

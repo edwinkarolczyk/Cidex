@@ -20,6 +20,7 @@ def main() -> None:
 
         import launcher
         from background_mode import install_background_mode
+        from plan_source_router import install_plan_source_router
         from runtime_compat import install_runtime_fixes
         from search_ui import install_search_ui
         from settings_enhancements import install_settings_enhancements
@@ -32,6 +33,7 @@ def main() -> None:
         install_visual_polish(launcher.EnhancedCidexApp)
         install_background_mode(launcher.EnhancedCidexApp)
         install_settings_enhancements(launcher.EnhancedCidexApp)
+        install_plan_source_router(launcher.EnhancedCidexApp)
         launcher.main()
     finally:
         guard.close()

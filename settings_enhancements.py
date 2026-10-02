@@ -228,13 +228,13 @@ class EnhancedSettingsDialog(tk.Toplevel):
         frame = self._section(
             parent,
             "ŹRÓDŁA DANYCH",
-            "Plik Excel i WM_ROOT to dwa niezależne miejsca. CIDEX nie przenosi ani nie łączy tych folderów.",
+            "Wybrany Excel jest wzorcem nazwy planu. CIDEX sprawdza w tym samym folderze oryginał i jego kopie z tej samej rodziny nazw; inne arkusze ignoruje. WM_ROOT pozostaje niezależny.",
         )
         self._entry_row(frame, 2, "Plik Excel", "plan_file", browse=self._choose_excel)
         self._entry_row(frame, 3, "WM_ROOT (opcjonalnie)", "wm_root", browse=self._choose_root)
         tk.Label(
             frame,
-            text="Excel = monitorowany plan.  WM_ROOT = tylko opcjonalne sprawdzanie, czy produkt istnieje w Warsztat Menager.",
+            text="Excel = wzorcowy plan i jego kopie w tym samym folderze. Każdy plik jest tylko krótko kopiowany do pliku roboczego i zamykany przed analizą. WM_ROOT = opcjonalne sprawdzanie produktu w Warsztat Menager.",
             bg=PANEL,
             fg=MUTED,
             font=("Segoe UI", 8),
