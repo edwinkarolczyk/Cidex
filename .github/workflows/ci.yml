@@ -74,7 +74,7 @@ jobs:
         run: |
           $version = python -c "from version import APP_VERSION; print(APP_VERSION)"
           $tag = "v$version"
-          $notes = "CIDEX $version - poprawki WM_ROOT i porównania produktów. CIDEX waliduje WM_ROOT, pokazuje właściwy katalog produktów, rozpoznaje produkty także wtedy, gdy plan dopisuje np. - RAL 7036, usuwa mylące POZA DZIAŁEM z kolumny WM oraz pokazuje datę wykrycia zmian w czytelnym formacie DD.MM.RRRR GG:MM:SS."
+          $notes = "CIDEX $version - stabilizacja autostartu Windows. CIDEX uruchamia EXE z poprawnym katalogiem roboczym, automatycznie naprawia stary wpis autostartu, czeka na dostępność dysku sieciowego/pliku planu i nie pokazuje ukrytych okien błędu podczas startu w tle."
           Copy-Item dist-onefile/Cidex.exe Cidex.exe -Force
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
